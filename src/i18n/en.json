@@ -1,0 +1,42 @@
+{
+  "dashboard": {
+  "welcome": "Welcome to the Admin Dashboard",
+  "intro": "This is where you can manage quotes, work orders, and customers."
+  },
+  "login": {
+    "title": "Admin Portal",
+    "prompt": "Please sign in to continue",
+    "button": "Sign in with Google",
+    "toggle": "Español / English"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "quotes": "Quotes",
+    "workOrders": "Work Orders",
+    "customers": "Customers",
+    "toggleLanguage": "Español",
+    "logout": "Logout"
+  },
+"workOrders": {
+  "title": "Work Orders",
+  "placeholder": "This is where you will create and track work orders for each property."
+},
+"customers": {
+  "title": "Customers",
+  "placeholder": "Here you can manage client details like name, contact info, and job history."
+},
+"notFound": {
+  "message": "Page not found.",
+  "back": "Back to Dashboard"
+},
+"quotes": {
+  "title": "Quotes",
+  "customer": "Customer Name",
+  "description": "Item Description",
+  "addItem": "Add Line Item",
+  "remove": "Remove",
+  "total": "Total",
+  "save": "Save Quote",
+  "send": "Send to Email"
+}
+}

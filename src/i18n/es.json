@@ -1,0 +1,42 @@
+{
+  "dashboard": {
+  "welcome": "Bienvenido al panel de administración",
+  "intro": "Aquí puede administrar cotizaciones, órdenes de trabajo y clientes."
+  },
+  "login": {
+    "title": "Portal de Administración",
+    "prompt": "Por favor, inicie sesión para continuar",
+    "button": "Iniciar sesión con Google",
+    "toggle": "Español / Inglés"
+  },
+  "nav": {
+    "dashboard": "Tablero",
+    "quotes": "Cotizaciones",
+    "workOrders": "Órdenes de trabajo",
+    "customers": "Clientes",
+    "toggleLanguage": "English",
+    "logout": "Cerrar sesión"
+  },
+"quotes": {
+  "title": "Cotizaciones",
+  "customer": "Nombre del cliente",
+  "description": "Descripción del artículo",
+  "addItem": "Agregar línea",
+  "remove": "Eliminar",
+  "total": "Total",
+  "save": "Guardar cotización",
+  "send": "Enviar por correo"
+},
+"workOrders": {
+  "title": "Órdenes de trabajo",
+  "placeholder": "Aquí es donde creará y rastreará órdenes de trabajo para cada propiedad."
+},
+"customers": {
+  "title": "Clientes",
+  "placeholder": "Aquí puede administrar los detalles del cliente como nombre, contacto e historial de trabajos."
+},
+"notFound": {
+  "message": "Página no encontrada.",
+  "back": "Volver al Tablero"
+}
+}
