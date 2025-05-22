@@ -99,15 +99,15 @@ router.post("/send", async (req, res) => {
     });
 
     const htmlBody = `
-      <h2>Quote from Terracotta Construction</h2>
-      <p>Hello ${customerName},</p>
-      <p>Here is your quote:</p>
-      <ul>
-        ${quoteItems.map(item => `<li>${item.quantity} × ${item.description} — $${item.price}</li>`).join("")}
-      </ul>
-      <p><strong>Total: $${total}</strong><br>Profit Margin: ${margin}%</p>
-      <p>Thank you,<br/>Terracotta Construction</p>
-    `;
+  <h2>Quote from Terracotta Construction</h2>
+  <p>Hello ${customerName},</p>
+  <p>Here is your quote:</p>
+  <ul>
+    ${quoteItems.map(item => `<li>${item.quantity} × ${item.description} — $${item.price}</li>`).join("")}
+  </ul>
+  <p><strong>Total: $${total}</strong></p>
+  <p>Thank you,<br/>Terracotta Construction</p>
+  `;
 
     await transporter.sendMail({
       from: `"Terracotta Construction" <${process.env.GMAIL_USER}>`,
