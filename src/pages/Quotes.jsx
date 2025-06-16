@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { calculateMargin, isBelowMinimumMargin } from "../modules/marginUtils";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  serverTimestamp,
+  doc,
+  getDoc
+} from "firebase/firestore";
+import { db } from "../firebase";
+import {
+  calculateMargin,
+  isBelowMinimumMargin
+} from "../modules/marginUtils";
 
 function Quotes() {
   const { t } = useTranslation();
@@ -17,19 +29,27 @@ function Quotes() {
   const { margin, totalCost, totalPrice } = calculateMargin(lineItems);
   const belowMargin = isBelowMinimumMargin(margin);
 
-  // Fetch all customers on load
+  // Fetch all customers from Firestore
   useEffect(() => {
-    fetch("http://localhost:5000/api/customers") // this route needs to return all customers
-      .then(res => res.json())
-      .then(data => {
-        setCustomers(data.customers || []);
-      })
-      .catch(err => console.error("Failed to fetch customers", err));
+    const fetchCustomers = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, "customers"));
+        const customerList = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setCustomers(customerList);
+      } catch (err) {
+        console.error("Failed to fetch customers", err);
+      }
+    };
+
+    fetchCustomers();
   }, []);
 
-  // Autofill name and email when selecting a customer
+  // Autofill when a customer is selected
   useEffect(() => {
-    const selected = customers.find(c => c.id === selectedCustomerId);
+    const selected = customers.find((c) => c.id === selectedCustomerId);
     if (selected) {
       setCustomerName(selected.name);
       setCustomerEmail(selected.email);
@@ -38,12 +58,16 @@ function Quotes() {
 
   const handleItemChange = (index, field, value) => {
     const updated = [...lineItems];
-    updated[index][field] = field === "description" ? value : parseFloat(value);
+    updated[index][field] =
+      field === "description" ? value : parseFloat(value || 0);
     setLineItems(updated);
   };
 
   const addLineItem = () => {
-    setLineItems([...lineItems, { description: "", quantity: 1, cost: 0, price: 0 }]);
+    setLineItems([
+      ...lineItems,
+      { description: "", quantity: 1, cost: 0, price: 0 }
+    ]);
   };
 
   const removeLineItem = (index) => {
@@ -51,30 +75,28 @@ function Quotes() {
     setLineItems(updated);
   };
 
+  // Send quote to Firestore
   const handleSend = async () => {
-    const quotePayload = {
-      customerEmail,
-      customerName,
-      quoteItems: lineItems,
-      margin: parseFloat(margin),
-      total: parseFloat(totalPrice),
-      allowOverride: overrideAllowed,
-    };
+    if (belowMargin && !overrideAllowed) {
+      alert("❌ Margin is below 30% and override is not allowed.");
+      return;
+    }
 
     try {
-      const response = await fetch("http://localhost:5000/api/quotes/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(quotePayload),
-      });
+      const payload = {
+        customer_name: customerName,
+        customer_email: customerEmail,
+        customer_id: selectedCustomerId || null,
+        quote_items: lineItems,
+        margin: parseFloat(margin),
+        total: parseFloat(totalPrice),
+        allow_override: overrideAllowed,
+        status: "Open",
+        created_at: serverTimestamp(),
+      };
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        alert(`❌ Error: ${result.message}`);
-      } else {
-        alert("✅ Quote sent and saved successfully.");
-      }
+      await addDoc(collection(db, "quotes"), payload);
+      alert("✅ Quote sent and saved successfully.");
     } catch (err) {
       console.error("Send error:", err);
       alert("❌ Something went wrong while sending the quote.");
@@ -83,7 +105,9 @@ function Quotes() {
 
   return (
     <div className="max-w-5xl mx-auto mt-8 p-4 bg-white rounded shadow">
-      <h1 className="text-2xl font-bold mb-4 text-terracotta">{t("quotes.title")}</h1>
+      <h1 className="text-2xl font-bold mb-4 text-terracotta">
+        {t("quotes.title")}
+      </h1>
 
       <label className="block mb-4">
         <span className="block font-semibold mb-1">Select Existing Customer</span>
@@ -128,14 +152,18 @@ function Quotes() {
               type="text"
               placeholder={t("quotes.description")}
               value={item.description}
-              onChange={(e) => handleItemChange(index, "description", e.target.value)}
+              onChange={(e) =>
+                handleItemChange(index, "description", e.target.value)
+              }
               className="col-span-2 border border-gray-300 rounded px-3 py-2"
             />
             <input
               type="number"
               min="1"
               value={item.quantity}
-              onChange={(e) => handleItemChange(index, "quantity", e.target.value)}
+              onChange={(e) =>
+                handleItemChange(index, "quantity", e.target.value)
+              }
               className="border border-gray-300 rounded px-3 py-2"
             />
             <input
@@ -198,6 +226,7 @@ function Quotes() {
       <div className="mt-6 flex gap-4">
         <button
           onClick={handleSend}
+          disabled={belowMargin && !overrideAllowed}
           className={`${
             belowMargin && !overrideAllowed
               ? "bg-gray-300 cursor-not-allowed"

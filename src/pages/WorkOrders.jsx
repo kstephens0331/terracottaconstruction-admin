@@ -1,4 +1,13 @@
 import React, { useState, useEffect } from "react";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  doc,
+  serverTimestamp
+} from "firebase/firestore";
+import { db } from "../firebase";
 
 function WorkOrders() {
   const [name, setName] = useState("");
@@ -11,9 +20,12 @@ function WorkOrders() {
 
   const fetchOrders = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/workorders");
-      const data = await res.json();
-      setOrders(data.work_orders || []);
+      const snapshot = await getDocs(collection(db, "work_orders"));
+      const orderList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setOrders(orderList);
     } catch (err) {
       console.error("Failed to fetch work orders", err);
     }
@@ -32,31 +44,22 @@ function WorkOrders() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/workorders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customer_name: name,
-          customer_email: email,
-          reference,
-          description,
-          status
-        })
+      await addDoc(collection(db, "work_orders"), {
+        customer_name: name,
+        customer_email: email,
+        description,
+        reference,
+        status,
+        created_at: serverTimestamp()
       });
 
-      const result = await res.json();
-
-      if (!res.ok) {
-        alert(`❌ ${result.message}`);
-      } else {
-        alert("✅ Work order submitted!");
-        setName("");
-        setEmail("");
-        setDescription("");
-        setReference("");
-        setStatus("New");
-        fetchOrders();
-      }
+      alert("✅ Work order submitted!");
+      setName("");
+      setEmail("");
+      setDescription("");
+      setReference("");
+      setStatus("New");
+      fetchOrders();
     } catch (err) {
       console.error("Submission error", err);
       alert("Failed to submit work order.");
@@ -67,19 +70,9 @@ function WorkOrders() {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/workorders/${id}/status`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus })
-      });
-
-      const result = await res.json();
-
-      if (!res.ok) {
-        alert(`Error: ${result.message}`);
-      } else {
-        fetchOrders();
-      }
+      const orderRef = doc(db, "work_orders", id);
+      await updateDoc(orderRef, { status: newStatus });
+      fetchOrders();
     } catch (err) {
       console.error("Status update failed", err);
     }
@@ -171,7 +164,11 @@ function WorkOrders() {
                     <option value="Complete">Complete</option>
                   </select>
                 </td>
-                <td className="p-2">{new Date(order.created_at).toLocaleString()}</td>
+                <td className="p-2">
+                  {order.created_at?.toDate
+                    ? order.created_at.toDate().toLocaleString()
+                    : "—"}
+                </td>
               </tr>
             ))}
           </tbody>

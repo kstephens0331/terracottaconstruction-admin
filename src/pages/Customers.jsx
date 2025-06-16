@@ -1,6 +1,13 @@
 // src/pages/Customers.jsx
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { db } from "../firebase";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  serverTimestamp
+} from "firebase/firestore";
 
 function Customers() {
   const { t } = useTranslation();
@@ -10,11 +17,15 @@ function Customers() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // 🔄 Load all customers from Firestore
   const fetchCustomers = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/customers");
-      const data = await res.json();
-      setCustomers(data.customers || []);
+      const snapshot = await getDocs(collection(db, "customers"));
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setCustomers(data);
     } catch (err) {
       console.error("Failed to fetch customers", err);
     }
@@ -24,25 +35,24 @@ function Customers() {
     fetchCustomers();
   }, []);
 
+  // ➕ Add new customer
   const handleCreate = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/customers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email }),
+      // Random 6-digit account number
+      const accountNumber = Math.floor(100000 + Math.random() * 900000).toString();
+
+      await addDoc(collection(db, "customers"), {
+        name,
+        email,
+        account_number: accountNumber,
+        created_at: serverTimestamp(),
       });
 
-      const result = await res.json();
-
-      if (!res.ok) {
-        alert(`❌ ${result.message}`);
-      } else {
-        alert("✅ Customer added!");
-        setName("");
-        setEmail("");
-        fetchCustomers(); // refresh list
-      }
+      alert("✅ Customer added!");
+      setName("");
+      setEmail("");
+      fetchCustomers(); // Refresh list
     } catch (err) {
       console.error("Add error", err);
       alert("Something went wrong while adding the customer.");

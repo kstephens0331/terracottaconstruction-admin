@@ -1,4 +1,13 @@
 import React, { useEffect, useState } from "react";
+import {
+  collection,
+  getDocs,
+  updateDoc,
+  doc,
+  query,
+  where
+} from "firebase/firestore";
+import { db } from "../firebase";
 
 function Dashboard() {
   const [quotes, setQuotes] = useState([]);
@@ -6,15 +15,29 @@ function Dashboard() {
   const [search, setSearch] = useState("");
 
   const fetchQuotes = async () => {
-    const res = await fetch("http://localhost:5000/api/quotes");
-    const data = await res.json();
-    setQuotes(data.quotes || []);
+    try {
+      const snapshot = await getDocs(collection(db, "quotes"));
+      const quoteList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setQuotes(quoteList);
+    } catch (err) {
+      console.error("Error fetching quotes:", err);
+    }
   };
 
   const fetchWorkOrders = async () => {
-    const res = await fetch("http://localhost:5000/api/workorders");
-    const data = await res.json();
-    setWorkOrders(data.work_orders || []);
+    try {
+      const snapshot = await getDocs(collection(db, "work_orders"));
+      const woList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setWorkOrders(woList);
+    } catch (err) {
+      console.error("Error fetching work orders:", err);
+    }
   };
 
   useEffect(() => {
@@ -23,21 +46,23 @@ function Dashboard() {
   }, []);
 
   const handleQuoteStatusChange = async (id, status) => {
-    await fetch(`http://localhost:5000/api/quotes/${id}/status`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    fetchQuotes();
+    try {
+      const quoteRef = doc(db, "quotes", id);
+      await updateDoc(quoteRef, { status });
+      fetchQuotes();
+    } catch (err) {
+      console.error("Failed to update quote status:", err);
+    }
   };
 
   const handleWorkOrderStatusChange = async (id, status) => {
-    await fetch(`http://localhost:5000/api/workorders/${id}/status`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    fetchWorkOrders();
+    try {
+      const woRef = doc(db, "work_orders", id);
+      await updateDoc(woRef, { status });
+      fetchWorkOrders();
+    } catch (err) {
+      console.error("Failed to update work order status:", err);
+    }
   };
 
   const filterData = (records) =>
