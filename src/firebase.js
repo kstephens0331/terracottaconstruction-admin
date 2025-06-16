@@ -9,23 +9,18 @@ import {
 } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBt_AsSQt54c3Y5oyF0D_d1swFe4FhWT7M",
-  authDomain: "terracottaconstruction-admin.firebaseapp.com",
-  projectId: "terracottaconstruction-admin",
-  storageBucket: "terracottaconstruction-admin.firebasestorage.app",
-  messagingSenderId: "381293354281",
-  appId: "1:381293354281:web:467e5bfd394940563a6b38",
-  measurementId: "G-0F5GG7F8BY"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-// Auth
+const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// Firestore
-const db = getFirestore(app);
-
-export { auth, provider, signInWithPopup, signOut, db };
+export { db, auth, provider, signInWithPopup, signOut };
